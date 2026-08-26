@@ -170,9 +170,25 @@
       <div id="audience-feedback" class="audience-feedback" hidden></div>
       <div class="audience-nav">
         <button id="audience-next" class="btn btn--secondary" type="button" hidden>Siguiente escenario</button>
+        <button id="audience-finish" class="btn btn--primary" type="button" hidden>Ver resultado final</button>
         <button id="audience-reset" class="btn btn--ghost" type="button">Reiniciar ejercicio</button>
       </div>
     </section>
+
+    <!-- POPUP DE RESULTADO FINAL DEL EJERCICIO -->
+    <div id="audience-results-modal" class="modal-overlay" hidden>
+      <div class="modal-box" role="dialog" aria-modal="true" aria-labelledby="audience-results-title">
+        <div class="modal-header">
+          <h2 id="audience-results-title">Resultado del ejercicio</h2>
+          <button id="audience-results-close" class="modal-close" type="button" aria-label="Cerrar">&times;</button>
+        </div>
+        <p id="audience-results-score" class="modal-score"></p>
+        <div id="audience-results-list" class="modal-results-list"></div>
+        <div class="modal-footer">
+          <button id="audience-results-retry" class="btn btn--primary" type="button">Reiniciar ejercicio</button>
+        </div>
+      </div>
+    </div>
 
     <!-- SEMÁFORO -->
     <section class="card card--traffic-light" id="traffic-light-section">
