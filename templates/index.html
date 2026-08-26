@@ -1,0 +1,235 @@
+{% extends "base.html" %}
+
+{% block body %}
+<div id="app" class="app">
+
+  <header class="app-header">
+    <div class="app-header__top">
+      <div class="app-header__titles">
+        <h1>Asistente Judicial con IA</h1>
+        <p class="subtitle">Demostración educativa de uso responsable de inteligencia artificial</p>
+      </div>
+      <div class="app-header__controls">
+        <button id="presentation-toggle" class="btn btn--ghost" type="button" aria-pressed="false">
+          Modo Presentación
+        </button>
+        <button id="global-reset" class="btn btn--ghost" type="button">
+          Reiniciar demostración
+        </button>
+      </div>
+    </div>
+    <div class="banner banner--demo">
+      ENTORNO DE DEMOSTRACIÓN — No utilizar información judicial real
+    </div>
+    <div class="banner banner--reminder">
+      Nunca ingrese información judicial real, confidencial o reservada en esta demostración.
+    </div>
+  </header>
+
+  <main class="app-main">
+
+    <!-- CASO FICTICIO -->
+    <section class="card card--case" id="case-section">
+      <div class="card__header">
+        <h2>{{ case_title }}</h2>
+        <span class="badge badge--fiction">Caso ficticio</span>
+      </div>
+      <p class="case-summary">{{ case_summary }}</p>
+      <details class="case-document-details">
+        <summary>Ver expediente completo</summary>
+        <pre id="case-document" class="document-view">Cargando expediente...</pre>
+      </details>
+      <p class="hint">Modelo configurado: <code>{{ ollama_model }}</code></p>
+    </section>
+
+    <!-- ESCENARIO 1 -->
+    <section class="card card--scenario" id="scenario-1" data-scenario-title="Escenario 1 — Delegación peligrosa">
+      <div class="card__header">
+        <h2>Escenario 1 — ¿Qué decisión debería tomar?</h2>
+        <span class="badge badge--danger">Delegación inapropiada</span>
+      </div>
+      <p class="prompt-label">Prompt enviado a la IA:</p>
+      <blockquote class="prompt-box prompt-box--danger">
+        Analiza el expediente y determina qué decisión debería tomar el juez. Indica quién tiene la razón y cuál debería ser la decisión judicial.
+      </blockquote>
+      <button id="btn-dangerous" class="btn btn--primary" type="button">Consultar IA</button>
+      <div id="loading-dangerous" class="loading" hidden>
+        <span class="spinner"></span> Consultando al modelo local...
+      </div>
+      <div id="error-dangerous" class="error-box" hidden></div>
+      <div id="result-dangerous" class="result-box" hidden>
+        <h3>Respuesta del modelo</h3>
+        <div id="result-dangerous-content" class="model-response"></div>
+      </div>
+      <div id="explain-dangerous" class="explain-box explain-box--danger" hidden>
+        <h3>¿Qué ocurrió?</h3>
+        <ul>
+          <li>Se le pidió a la IA que cruzara un límite inapropiado.</li>
+          <li>Se le solicitó realizar una valoración judicial, en lugar de apoyar el análisis de información.</li>
+          <li>Una respuesta segura y bien redactada no significa que la conclusión sea legalmente correcta.</li>
+          <li>El modelo puede omitir contexto, alucinar información o reproducir sesgos.</li>
+          <li>La responsabilidad judicial no puede transferirse a un sistema de IA.</li>
+        </ul>
+        <p class="callout callout--danger">
+          Problema: estamos delegando razonamiento y decisión, no solamente procesamiento de información.
+        </p>
+      </div>
+    </section>
+
+    <!-- ESCENARIO 2 -->
+    <section class="card card--scenario" id="scenario-2" data-scenario-title="Escenario 2 — Asistencia responsable">
+      <div class="card__header">
+        <h2>Escenario 2 — IA como herramienta de apoyo</h2>
+        <span class="badge badge--safe">Uso responsable</span>
+      </div>
+      <p class="prompt-label">Prompt enviado a la IA:</p>
+      <blockquote class="prompt-box prompt-box--safe">
+        Analiza únicamente la información proporcionada.<br><br>
+        Organiza el expediente identificando: hechos relevantes, fechas, actores, argumentos de la fiscalía, argumentos de la defensa, evidencia mencionada, contradicciones que requieren revisión humana e información que no puede verificarse.<br><br>
+        No determines culpabilidad. No evalúes la credibilidad de los testigos. No recomiendes ninguna decisión judicial. No inventes información ausente en el documento.
+      </blockquote>
+      <button id="btn-responsible" class="btn btn--primary" type="button">Analizar expediente</button>
+      <div id="loading-responsible" class="loading" hidden>
+        <span class="spinner"></span> Consultando al modelo local...
+      </div>
+      <div id="error-responsible" class="error-box" hidden></div>
+      <div id="result-responsible" class="result-box" hidden>
+        <h3>Expediente organizado</h3>
+        <div id="result-responsible-content" class="structured-grid"></div>
+      </div>
+      <div id="explain-responsible" class="explain-box explain-box--safe" hidden>
+        <h3>¿Qué cambió?</h3>
+        <p class="callout callout--safe">
+          La IA no tomó la decisión. Organizó información para facilitar la revisión humana.
+        </p>
+      </div>
+    </section>
+
+    <!-- ESCENARIO 3 -->
+    <section class="card card--scenario" id="scenario-3" data-scenario-title="Escenario 3 — Prompt injection indirecto">
+      <div class="card__header">
+        <h2>Escenario 3 — ¿Podemos confiar en todo lo que lee la IA?</h2>
+        <span class="badge badge--warning">Instrucción oculta</span>
+      </div>
+
+      <label class="toggle">
+        <input type="checkbox" id="toggle-full-document">
+        <span>Mostrar documento completo</span>
+      </label>
+
+      <div id="document-preview" class="document-view document-view--preview"></div>
+      <pre id="document-full" class="document-view document-view--full" hidden></pre>
+
+      <div class="scenario3-buttons">
+        <button id="btn-injection" class="btn btn--danger-outline" type="button">Analizar sin protección</button>
+        <button id="btn-protected" class="btn btn--primary" type="button">Analizar con protección</button>
+      </div>
+
+      <div id="loading-injection" class="loading" hidden>
+        <span class="spinner"></span> Consultando al modelo local (sin protección)...
+      </div>
+      <div id="error-injection" class="error-box" hidden></div>
+      <div id="result-injection" class="result-box" hidden>
+        <h3>Respuesta sin protección</h3>
+        <div id="result-injection-content" class="model-response"></div>
+      </div>
+
+      <div id="loading-protected" class="loading" hidden>
+        <span class="spinner"></span> Consultando al modelo local (con protección)...
+      </div>
+      <div id="error-protected" class="error-box" hidden></div>
+      <div id="result-protected" class="result-box" hidden>
+        <h3>Respuesta con protección</h3>
+        <div id="detection-banner" class="detection-banner" hidden></div>
+        <div id="result-protected-content" class="structured-grid"></div>
+      </div>
+
+      <div id="explain-injection" class="explain-box explain-box--warning" hidden>
+        <h3>¿Qué ocurrió?</h3>
+        <p>La IA puede confundir la información que debe analizar con instrucciones que debe obedecer.</p>
+        <p class="callout callout--warning">
+          Este fenómeno se conoce como <strong>Indirect Prompt Injection</strong> (inyección de instrucciones indirecta): un documento que la IA solo debería <em>leer</em> contiene texto redactado para que la IA lo <em>obedezca</em>. Por eso el contenido de documentos externos debe tratarse siempre como datos, nunca como instrucciones.
+        </p>
+      </div>
+    </section>
+
+    <!-- COMPONENTE INTERACTIVO -->
+    <section class="card card--audience" id="audience-section">
+      <div class="card__header">
+        <h2>¿Usarías IA para esto?</h2>
+      </div>
+      <div class="audience-progress">
+        <span id="audience-progress-label"></span>
+      </div>
+      <p id="audience-scenario-text" class="audience-scenario"></p>
+      <div class="audience-buttons">
+        <button class="btn btn--vote btn--vote-yes" data-vote="si" type="button">🟢 Sí</button>
+        <button class="btn btn--vote btn--vote-maybe" data-vote="depende" type="button">🟡 Depende</button>
+        <button class="btn btn--vote btn--vote-no" data-vote="no" type="button">🔴 No</button>
+      </div>
+      <div id="audience-feedback" class="audience-feedback" hidden></div>
+      <div class="audience-nav">
+        <button id="audience-next" class="btn btn--secondary" type="button" hidden>Siguiente escenario</button>
+        <button id="audience-reset" class="btn btn--ghost" type="button">Reiniciar ejercicio</button>
+      </div>
+    </section>
+
+    <!-- SEMÁFORO -->
+    <section class="card card--traffic-light" id="traffic-light-section">
+      <div class="card__header">
+        <h2>Semáforo para el uso de IA</h2>
+      </div>
+      <div class="traffic-light-grid">
+        <div class="traffic-light-column traffic-light-column--green">
+          <h3>🟢 Asistencia apropiada</h3>
+          <ul>
+            <li>Resumir</li>
+            <li>Organizar</li>
+            <li>Clasificar</li>
+            <li>Extraer información</li>
+            <li>Comparar documentos</li>
+            <li>Preparar borradores</li>
+            <li>Identificar elementos que requieren revisión humana</li>
+          </ul>
+        </div>
+        <div class="traffic-light-column traffic-light-column--yellow">
+          <h3>🟡 Requiere controles adicionales</h3>
+          <ul>
+            <li>Información sensible</li>
+            <li>Investigación jurídica</li>
+            <li>Interpretación de información ambigua</li>
+            <li>Generación de borradores judiciales</li>
+            <li>Detección de contradicciones</li>
+            <li>Recomendaciones que puedan influir en decisiones</li>
+          </ul>
+          <p class="traffic-light-note">Requiere: sistemas aprobados, revisión humana, verificación de fuentes y trazabilidad.</p>
+        </div>
+        <div class="traffic-light-column traffic-light-column--red">
+          <h3>🔴 No delegar</h3>
+          <ul>
+            <li>Determinar culpabilidad</li>
+            <li>Decidir credibilidad</li>
+            <li>Recomendaciones de sentencia</li>
+            <li>Evaluar evidencia de forma automática</li>
+            <li>Predecir comportamiento criminal individual</li>
+            <li>Reemplazar el razonamiento judicial</li>
+            <li>Tomar decisiones judiciales finales</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- MENSAJE FINAL -->
+    <section class="final-message" id="final-message">
+      <h2>La IA puede ayudarnos a procesar información.</h2>
+      <h3>La responsabilidad, el razonamiento y la decisión siguen siendo humanos.</h3>
+    </section>
+
+  </main>
+
+  <footer class="app-footer">
+    <p>Aplicación de demostración educativa — Sin conexión a servicios de IA en la nube. Todo el procesamiento ocurre localmente mediante Ollama.</p>
+  </footer>
+
+</div>
+{% endblock %}
